@@ -1,17 +1,38 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Character} from '../components/models/character';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DragonBallService {
-  constructor(readonly httpClient: HttpClient) {}
+  private baseUrl = 'https://dragonball-api.com/api/characters';
 
-  getCharacters(): Observable<Character[]> {
-    let url = 'https://dragonball-api.com/api/characters'
+  constructor(private http: HttpClient) {}
 
-    return this.httpClient.get<Character[]>(url);
+  getCharacters(page: number = 1, limit: number = 10): Observable<{ items: Character[], meta: any, links: any }> {
+    const url = `${this.baseUrl}?page=${page}&limit=${limit}`;
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+
+    return this.http.get<{ items: Character[], meta: any, links: any }>(url, { headers }).pipe(
+      map(response => response)
+    );
+  }
+
+  getFilteredCharacters(page: number = 1, limit: number = 10, filters: any): Observable<{ items: Character[], meta: any, links: any }> {
+    let query = `?page=${page}&limit=${limit}`;
+    for (let key in filters) {
+      if (filters[key]) {
+        query += `&${key}=${filters[key]}`;
+      }
+    }
+    const url = `${this.baseUrl}${query}`;
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+
+    return this.http.get<{ items: Character[], meta: any, links: any }>(url, { headers }).pipe(
+      map(response => response)
+    );
   }
 }
